@@ -5,13 +5,14 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
 
 const signUpSchema = z.object({
     name: z.string().min(1),
@@ -22,8 +23,15 @@ const signUpSchema = z.object({
 type SignUpForm = z.infer<typeof signUpSchema>;
 
 async function handleSignUp(data: SignUpForm) {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    console.log(data);
+    await authClient.signUp.email(
+            { ...data, callbackURL: "/" }, 
+            {
+                onError: (error) => {
+                    toast.error(error.error.message || "Failed to sign up");
+                }
+            }
+        );
+    
 }
 
 export function SignUpTab() {
