@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { LoadingSwap } from "@/components/ui/loading-swap";
 
 const signUpSchema = z.object({
     name: z.string().min(1),
@@ -22,19 +24,8 @@ const signUpSchema = z.object({
 
 type SignUpForm = z.infer<typeof signUpSchema>;
 
-async function handleSignUp(data: SignUpForm) {
-    await authClient.signUp.email(
-            { ...data, callbackURL: "/" }, 
-            {
-                onError: (error) => {
-                    toast.error(error.error.message || "Failed to sign up");
-                }
-            }
-        );
-    
-}
-
 export function SignUpTab() {
+    const router = useRouter();
     const form = useForm<SignUpForm>({
         resolver: zodResolver(signUpSchema),
         defaultValues: {
@@ -45,6 +36,23 @@ export function SignUpTab() {
     })
 
     const { isSubmitting } = form.formState;
+
+
+
+    async function handleSignUp(data: SignUpForm) {
+        await authClient.signUp.email(
+                { ...data, callbackURL: "/" }, 
+                {
+                    onError: (error) => {
+                        toast.error(error.error.message || "Failed to sign up");
+                    },
+                    onSuccess: () => {
+                        router.push("/");
+                    }
+                }
+            );
+        
+    }
 
     return (
         <form className="space-y-4" onSubmit={form.handleSubmit(handleSignUp)}>
@@ -109,9 +117,8 @@ export function SignUpTab() {
                 />
             </FieldGroup>
 
-            <Button type="submit">
-                {isSubmitting && <p>Loading...</p>}
-                Sign Up
+            <Button type="submit" disabled={isSubmitting}>
+                <LoadingSwap isLoading={isSubmitting}>Sign Up</LoadingSwap>
             </Button>
         </form>
     );
